@@ -1,9 +1,7 @@
 local api = vim.api
 local ts = vim.treesitter
 local fn = vim.fn
-local parsers = require('nvim-treesitter.parsers')
 local M = {}
-local AUGROUP = api.nvim_create_augroup('tree-pairs', {})
 
 -- The modes for which to enable the mapping, along with their fallback
 -- strategies.
@@ -93,9 +91,9 @@ local function match(buf, fallback)
     return fallback()
   end
 
-  local pos = api.nvim_win_get_cursor(0)
-  local cursor_row = pos[1] - 1
-  local cursor_col = pos[2]
+  local cursor_pos = api.nvim_win_get_cursor(0)
+  local cursor_row = cursor_pos[1] - 1
+  local cursor_col = cursor_pos[2]
   local line = api.nvim_get_current_line()
 
   if #line > 0 then
@@ -187,29 +185,22 @@ local function match(buf, fallback)
 end
 
 function M.setup()
-  api.nvim_create_autocmd('FileType', {
-    group = AUGROUP,
-    pattern = '*',
-    desc = 'Sets up tree-pairs for a buffer',
-    callback = function()
-      local buf = api.nvim_get_current_buf()
+  local buf = api.nvim_get_current_buf()
 
-      if DISABLE_FT[vim.bo[buf].ft] then
-        return
-      end
+  if DISABLE_FT[vim.bo[buf].ft] then
+    return
+  end
 
-      local opts = {
-        desc = 'Jump to the opposite end of the current Tree-sitter node',
-        buffer = buf,
-      }
+  local opts = {
+    desc = 'Jump to the opposite end of the current Tree-sitter node',
+    buffer = buf,
+  }
 
-      for mode, fallback in pairs(MODES) do
-        vim.keymap.set(mode, '%', function()
-          match(buf, fallback)
-        end, opts)
-      end
-    end,
-  })
+  for mode, fallback in pairs(MODES) do
+    vim.keymap.set(mode, '%', function()
+      match(buf, fallback)
+    end, opts)
+  end
 end
 
 return M
